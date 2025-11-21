@@ -1,0 +1,88 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700&display=swap');
+
+body {
+    font-family: 'Noto Serif SC', serif, system-ui, -apple-system, sans-serif;
+}
+
+/* 3D 视口设置 */
+.perspective-container {
+    perspective: 1000px;
+}
+
+.preserve-3d {
+    transform-style: preserve-3d;
+    /* 初始轻微倾斜，更有立体感 */
+    transform: rotateX(-10deg) rotateY(0deg); 
+}
+
+/* 爱心文字标签 */
+.heart-tag {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform-style: preserve-3d;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* 弹性过渡 */
+    user-select: none;
+    /* 修复旋转消失问题：允许背面可见 */
+    backface-visibility: visible;
+    cursor: pointer;
+}
+
+.heart-tag:hover {
+    /* 悬停效果交给 JS 处理点击，或者仅做轻微放大 */
+    filter: brightness(1.2);
+}
+
+/* 背景动态光斑 */
+.floating-light {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
+    pointer-events: none;
+    animation: float-around 20s infinite linear;
+    opacity: 0.6;
+}
+
+@keyframes float-around {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(100px, 50px) rotate(90deg); }
+    50% { transform: translate(0, 100px) rotate(180deg); }
+    75% { transform: translate(-100px, 50px) rotate(270deg); }
+    100% { transform: translate(0, 0) rotate(360deg); }
+}
+
+/* SVG 爱心描边动画 */
+.path-drawing {
+    stroke-dasharray: 600; /* 路径总长度，大概估算 */
+    stroke-dashoffset: 600; /* 初始完全隐藏 */
+    animation: draw-heart 3s ease-out forwards;
+    animation-play-state: paused; /* 默认暂停，通过 JS 启动 */
+}
+
+@keyframes draw-heart {
+    to {
+        stroke-dashoffset: 0;
+        fill: rgba(244, 114, 182, 0.1); /* 画完后稍微填充一点淡粉色 */
+    }
+}
+
+/* 动画关键帧 */
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+/* 跑路按钮的绝对定位类 */
+.btn-runaway {
+    position: absolute;
+    transition: all 0.2s ease-out;
+}
+
+/* 烟花粒子样式 */
+.particle {
+    position: absolute;
+    pointer-events: none;
+    border-radius: 50%;
+}

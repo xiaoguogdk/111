@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>For You</title>
+    <!-- 引入 TailwindCSS (样式库) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 GSAP (动画库) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@500&display=swap" rel="stylesheet">
+</head>
+<body class="bg-pink-50 overflow-hidden w-screen h-screen selection:bg-pink-200">
+
+    <!-- 背景音乐 -->
+    <!-- 提示：为了保证音乐能播放，我们将其绑定在点击信封的动作上 -->
+    <audio id="bgm" loop>
+        <!-- 这里用了一首温馨的钢琴曲，你可以换成她喜欢的歌 -->
+        <source src="https://music.163.com/song/media/outer/url?id=1824045033.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- 场景1：信封开场 -->
+    <div id="scene-intro" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-pink-50 transition-opacity duration-1000">
+        <div class="relative cursor-pointer group" id="envelope-trigger">
+            <!-- 信封主体 -->
+            <div class="w-72 h-48 bg-gradient-to-b from-pink-300 to-pink-400 rounded-b-3xl shadow-2xl relative z-10 overflow-hidden transition-transform duration-300 group-hover:scale-105 group-hover:-rotate-2">
+                
+                <!-- 装饰：可爱的腮红 -->
+                <div class="absolute bottom-8 left-8 w-6 h-4 bg-pink-200/60 rounded-[100%] blur-sm z-30"></div>
+                <div class="absolute bottom-8 right-8 w-6 h-4 bg-pink-200/60 rounded-[100%] blur-sm z-30"></div>
+                <!-- 装饰：小表情 -->
+                <div class="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/80 text-xl font-bold z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 tracking-widest">
+                    (｡♥‿♥｡)
+                </div>
+
+                <!-- 信封折痕 -->
+                <div class="absolute top-0 left-0 w-0 h-0 border-l-[144px] border-r-[144px] border-t-[96px] border-l-transparent border-r-transparent border-t-pink-200 opacity-90 origin-top transition-transform duration-700 z-20" id="flap"></div>
+                <div class="absolute bottom-0 left-0 w-0 h-0 border-l-[144px] border-r-[144px] border-b-[96px] border-l-transparent border-r-transparent border-b-pink-500 opacity-10"></div>
+                
+                <!-- 里面的信 -->
+                <div class="absolute left-6 right-6 top-4 bottom-0 bg-white rounded-t-2xl shadow-sm transform translate-y-16 transition-transform duration-700 z-0 flex items-start justify-center pt-6" id="letter">
+                    <span class="text-pink-500 font-serif text-xl font-bold tracking-wider">To: 李奕辰</span>
+                </div>
+            </div>
+            <!-- 爱心封口 -->
+            <div class="absolute top-12 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30 transition-all duration-500" id="heart-seal">
+                <div class="text-red-400 text-5xl drop-shadow-lg animate-bounce">❤</div>
+            </div>
+        </div>
+        <p class="mt-16 text-pink-400 text-sm tracking-[0.2em] animate-pulse font-medium">点击查收你的心意</p>
+    </div>
+
+    <!-- 场景2：3D文字爱心 -->
+    <div id="scene-main" class="fixed inset-0 z-10 opacity-0 pointer-events-none transition-opacity duration-1000 flex flex-col items-center justify-center bg-gradient-to-b from-pink-50 to-white overflow-hidden">
+        
+        <!-- 氛围背景装饰 -->
+        <div class="floating-light w-64 h-64 top-20 left-10 delay-0"></div>
+        <div class="floating-light w-96 h-96 bottom-20 right-10 delay-1000" style="animation-duration: 25s;"></div>
+        <div class="floating-light w-40 h-40 top-1/2 right-1/4 delay-500" style="animation-duration: 15s;"></div>
+
+        <!-- 3D 容器 -->
+        <div class="relative w-full h-[60vh] flex items-center justify-center perspective-container touch-none" id="heart-wrapper">
+            <div id="heart-3d" class="preserve-3d relative w-0 h-0">
+                <!-- 文字将通过 JS 生成在这里 -->
+            </div>
+        </div>
+
+        <!-- 底部按钮 -->
+        <div class="absolute bottom-12 z-20 pointer-events-auto">
+            <button id="btn-confess" class="px-8 py-3 bg-white/90 backdrop-blur text-pink-500 rounded-full shadow-[0_4px_20px_rgba(236,72,153,0.3)] border border-pink-100 hover:scale-105 active:scale-95 transition-all font-medium tracking-widest">
+                点这里，我有话对你说 💌
+            </button>
+        </div>
+    </div>
+
+    <!-- 场景3：表白弹窗 -->
+    <div id="scene-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-[2px] opacity-0 pointer-events-none transition-all duration-500">
+        <div class="bg-white/95 p-8 rounded-[2rem] shadow-2xl max-w-[85vw] w-80 text-center transform scale-90 transition-all duration-500 relative overflow-hidden" id="modal-card">
+            
+            <!-- 装饰 -->
+            <div class="absolute -top-10 -left-10 w-32 h-32 bg-pink-100 rounded-full blur-2xl opacity-60"></div>
+            <div class="absolute -bottom-10 -right-10 w-32 h-32 bg-purple-100 rounded-full blur-2xl opacity-60"></div>
+
+            <h2 class="relative text-2xl font-bold text-gray-800 mb-6 font-serif">做我女朋友好吗？</h2>
+            
+            <p class="relative text-gray-500 mb-8 text-sm leading-relaxed font-light">
+                如果说喜欢你是银河系<br>
+                那我的心意就是无数颗星星<br>
+                永远围着你转
+            </p>
+
+            <div class="relative space-y-3">
+                <button id="btn-yes" class="w-full py-3.5 bg-gradient-to-r from-pink-400 to-pink-500 text-white rounded-xl font-bold shadow-lg shadow-pink-200 transform transition-transform active:scale-95 hover:shadow-xl">
+                    好呀 ❤
+                </button>
+                <button id="btn-no" class="w-full py-3.5 bg-gray-50 text-gray-400 rounded-xl font-medium text-sm transition-all hover:bg-gray-100">
+                    不要
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 场景4：最终谢幕 (高级感文字) -->
+    <div id="scene-finale" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white opacity-0 pointer-events-none transition-opacity duration-1000">
+        
+        <!-- 1. 连笔爱心 SVG -->
+        <svg width="200" height="150" viewBox="0 0 200 150" class="mb-8 opacity-0 transition-opacity duration-1000" id="drawing-heart">
+            <!-- 这是一个手绘风格的爱心路径 -->
+            <path d="M100,130 C20,90 0,50 0,30 C0,10 20,0 50,0 C70,0 90,10 100,30 C110,10 130,0 150,0 C180,0 200,10 200,30 C200,50 180,90 100,130 Z" 
+                  fill="none" stroke="#F472B6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+                  class="path-drawing" />
+        </svg>
+
+        <h1 class="text-3xl md:text-5xl font-serif text-gray-800 mb-6 tracking-widest opacity-0 translate-y-10 transition-all duration-1000" id="finale-title">
+            山野万里 · 你是微风
+        </h1>
+        <p class="text-lg text-gray-500 font-light tracking-[0.4em] opacity-0 translate-y-10 transition-all duration-1000 delay-500" id="finale-subtitle">
+            星河滚烫 · 亦是人间理想
+        </p>
+        
+        <!-- 2. 底部定格时间 -->
+        <div class="absolute bottom-20 opacity-0 transition-opacity duration-1000 delay-1000" id="finale-date">
+            <p class="text-pink-400 font-mono text-sm tracking-widest border-t border-pink-200 pt-4">
+                <span id="current-date">202X.XX.XX</span> · DAY 1
+            </p>
+        </div>
+    </div>
+
+    <!-- 粒子画布 -->
+    <canvas id="canvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
+
+    <script src="script.js"></script>
+</body>
+</html>
